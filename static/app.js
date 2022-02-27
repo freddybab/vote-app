@@ -1,6 +1,9 @@
-function updateViewWithListItem(view, inputSpan, item) {
+const TODO_ID_PREFIX = "todo-"
+
+function updateViewWithListItem(view, inputSpan, modelElement) {
     const li = document.createElement("li");
-    const text = document.createTextNode(item.task);
+    li.id = `${TODO_ID_PREFIX}${modelElement.id}`;
+    const text = document.createTextNode(modelElement.task);
     li.classList.add("list-group-item");
     li.append(text);
     view.insertBefore(li, inputSpan);
@@ -24,13 +27,15 @@ function submitTask() {
         }
     ).then(response => {
         // UPDATE VIEW
-        response.json().then(
-            json => {
-                updateViewWithListItem(list, inputSpan, json)
-            }
-        )
+        if (response.status === 201) {
+            response.json().then(
+                json => {
+                    updateViewWithListItem(list, inputSpan, json)
+                }
+            )
+            taskInput.value = "";
+        }
     });
-    taskInput.value = "";
 }
 
 // UPDATE VIEW
@@ -41,14 +46,15 @@ function setupTaskList() {
 
     fetch('../api/todos').then(
         response => {
-            response.json().then(
-                json => {
-                    list.innerHtml = ''; // reset list of tasks
-                    json.forEach(function (element) {
-                        updateViewWithListItem(list, inputSpan, element)
+            if (response.status === 200) {
+                response.json().then(
+                    json => {
+                        list.innerHtml = ''; // reset list of tasks
+                        json.forEach(function (element) {
+                            updateViewWithListItem(list, inputSpan, element)
+                    });
                 });
             }
-        )
     });
 
 
