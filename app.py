@@ -1,7 +1,7 @@
 import os
 
-from flask import Flask, request
-from flask.helpers import safe_join
+from flask import Flask, request, send_from_directory
+from werkzeug.utils import safe_join
 from flask_restx import Api, Resource, fields
 
 app = Flask(__name__)
@@ -12,7 +12,7 @@ api = Api(app, version='1.0', title='TodoMVC API',
     description='A simple TodoMVC API', doc='/documentation'
 )
 
-ns = api.namespace('todos', description='TODO operations')
+ns = api.namespace('todos', description='TODO operations', path='/api/todos')
 
 todo = api.model('Todo', {
     'id': fields.Integer(readonly=True, description='The task unique identifier'),
@@ -33,7 +33,8 @@ class TodoDAO(object):
 
     def create(self, data):
         todo = data
-        todo['id'] = self.counter = self.counter + 1
+        self.counter += 1
+        todo['id'] = self.counter
         self.todos.append(todo)
         return todo
 
@@ -51,6 +52,16 @@ DAO = TodoDAO()
 DAO.create({'task': 'Build an API'})
 DAO.create({'task': '?????'})
 DAO.create({'task': 'profit!'})
+
+@app.route('/')
+def _home():
+    """Serve index.html at the root url"""
+    return send_from_directory(static, 'index.html')
+
+@app.route('/<path:path>')
+def _static(path):
+    """Serve content from the static directory"""
+    return send_from_directory(static, path)
 
 
 @ns.route('/')
