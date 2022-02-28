@@ -1,18 +1,17 @@
-function updateViewWithListItem(view, inputSpan, modelElement) {
-    const li = document.createElement("li");
+function updateViewWithListItem(view, modelElement) {
+    const li = document.createElement("div");
     li.dataset.todo_id = modelElement.id;
 
     const text = document.createTextNode(modelElement.task);
     li.classList.add("list-group-item");
     li.append(text);
-    view.insertBefore(li, inputSpan);
+    view.append(li);
 }
 
 // UPDATE MODEL
 function submitTask() {
     const taskInput = document.getElementById("task-input");
     const list = document.getElementById('task-list');
-    const inputSpan = document.getElementById('task-input-span');
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
@@ -29,7 +28,7 @@ function submitTask() {
         if (response.status === 201) {
             response.json().then(
                 json => {
-                    updateViewWithListItem(list, inputSpan, json)
+                    updateViewWithListItem(list, json)
                 }
             )
             taskInput.value = "";
@@ -41,7 +40,6 @@ function submitTask() {
 function setupTaskList() {
     console.log("Fetching task list")
     const list = document.getElementById('task-list');
-    const inputSpan = document.getElementById('task-input-span');
 
     fetch('../api/todos').then(
         response => {
@@ -50,7 +48,7 @@ function setupTaskList() {
                     json => {
                         list.innerHtml = ''; // reset list of tasks
                         json.forEach(function (element) {
-                            updateViewWithListItem(list, inputSpan, element)
+                            updateViewWithListItem(list, element)
                     });
                 });
             }

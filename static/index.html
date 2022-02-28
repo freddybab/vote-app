@@ -21,11 +21,15 @@
         
         <script src="./app.js" async defer></script>
         <div class="container d-flex align-items-center justify-content-center">
-            <ul id="task-list" class="list-group">
-                <span id="task-input-span" class="list-group-item list-group-action-item">
-                    <input type="text" id="task-input"><button onclick="submitTask()">Submit Task</button>
-                </span>
-            </ul>
+            <div>
+                <div id="task-list" class="list-group"></div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="task-input">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" onclick="submitTask()" >Submit</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
 </html>
