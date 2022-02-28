@@ -1,11 +1,12 @@
 function updateViewWithListItem(view, modelElement) {
-    const li = document.createElement("div");
-    li.dataset.todo_id = modelElement.id;
-
-    const text = document.createTextNode(modelElement.task);
-    li.classList.add("list-group-item");
-    li.append(text);
-    view.append(li);
+    view.innerHTML += 
+    `
+    <div class="list-group-item d-flex flex-row justify-content-between" data-task-id="${modelElement.id}">
+        <div>
+            <p>${modelElement.task}</p>
+        </div>
+    </div>
+    `
 }
 
 // UPDATE MODEL
