@@ -16,7 +16,8 @@ ns = api.namespace('todos', description='TODO operations', path='/api/todos')
 
 todo = api.model('Todo', {
     'id': fields.Integer(readonly=True, description='The task unique identifier'),
-    'task': fields.String(required=True, description='The task details')
+    'task': fields.String(required=True, description='The task details'),
+    'starred': fields.Boolean(description='Whether the task is very special', default=False)
 })
 
 
