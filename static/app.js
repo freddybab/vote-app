@@ -1,9 +1,31 @@
+function deleteTask(taskId) {
+    taskElement = document.querySelectorAll(`[data-task-id="${taskId}"]`)[0];
+
+    // Update Model
+    fetch(`../api/todos/${taskId}`,
+    {
+        method: "DELETE"
+    }).then(
+        response => {
+            if (response.status == 204) {
+                // Delete success, update view:
+                taskElement.remove();
+            }
+        }
+    )
+
+}
+
+
 function updateViewWithListItem(view, modelElement) {
     view.innerHTML += 
     `
     <div class="list-group-item d-flex flex-row justify-content-between" data-task-id="${modelElement.id}">
         <div>
             <p>${modelElement.task}</p>
+        </div>
+        <div>
+            <button class="btn" type="button" onclick="deleteTask(${modelElement.id})"><i class="bi bi-trash3"></i></button>
         </div>
     </div>
     `
