@@ -22,13 +22,18 @@
         <script src="./app.js" async defer></script>
         <div class="container panel align-items-center justify-content-center">
             <div>
-                <div id="task-list" class="list-group"></div>
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" id="task-input">
                     <div class="input-group-append">
                         <button class="btn btn-outline-primary" type="button" onclick="submitTask()" >Submit</button>
                     </div>
                 </div>
+                <div id="task-list" class="list-group"></div>
+
+                <!-- TODO add devidera? -->
+                <div class="divider"></div>
+                
+                <div id="done-list" class="list-group"></div>
             </div>
         </div>
     </body>
