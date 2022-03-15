@@ -12,6 +12,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="./styles.css">
+
 
     </head>
     <body>
@@ -22,7 +24,7 @@
         <script src="./app.js" async defer></script>
         <div class="container panel align-items-center justify-content-center">
             <div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-3 pt-3">
                     <input type="text" class="form-control" id="task-input">
                     <div class="input-group-append">
                         <button class="btn btn-outline-primary" type="button" onclick="submitTask()" >Submit</button>
@@ -30,10 +32,9 @@
                 </div>
                 <div id="task-list" class="list-group"></div>
 
-                <!-- TODO add devidera? -->
-                <div class="divider"></div>
+                <div class="divider" class="pt-3 pb-3"></div>
                 
-                <div id="done-list" class="list-group"></div>
+                <div id="done-list" class="pt-3 list-group done"></div>
             </div>
         </div>
     </body>

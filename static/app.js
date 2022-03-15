@@ -50,14 +50,49 @@ function updateViewWithListItem(modelElement) {
     updateViewWithListItem(list, modelElement);
 }
 
+function updateDone(taskId, oldValue) {
+     // Update Model
+     fetch(`../api/todos/${taskId}`,
+     {
+         method: "PUT",
+         headers: new Headers({"Content-Type": "application/json"}),
+         body: JSON.stringify({
+             done: !oldValue
+         })
+     }).then(
+         response => {
+             if (response.status == 200) {
+                 // Update success, update View:
+                 refreshTaskList(); // YOLO    
+             }
+         }
+     )
+
+}
+
+function getTextClass(element) {
+    let classes = "";
+    if (element.done) {
+        classes += "text-muted";
+    }
+
+    return classes;
+}
+
+
 function updateViewWithListItem(view, modelElement) {
+
 
     view.innerHTML += 
     `
     <div class="list-group-item d-flex flex-row justify-content-between" id="task-${modelElement.id}" data-task-id="${modelElement.id}" data-task-text="${modelElement.task}">
         <div>
-            <p>${modelElement.task}</p>
+            <p class="${getTextClass(modelElement)}">${modelElement.task}</p>
         </div>
+        <div>
+            <button class="btn" onclick="updateDone(${modelElement.id}, ${modelElement.done})"><i class="bi bi-check-circle"></i> </button>
+        </div>
+
         <div>
             <button class="btn" type="button" onclick="updateStarred(${modelElement.id}, ${modelElement.fav})"><i class="bi ${getStarIcon(modelElement.fav)}"></i></button>
         </div>
@@ -98,6 +133,7 @@ function submitTask() {
 function refreshTaskList() {
     console.log("Fetching task list")
     const list = document.getElementById('task-list');
+    const doneList = document.getElementById('done-list');
 
     fetch('../api/todos').then(
         response => {
@@ -105,8 +141,15 @@ function refreshTaskList() {
                 response.json().then(
                     json => {
                         list.innerHTML = ''; // reset list of tasks
+                        doneList.innerHTML = '';
                         json.forEach(function (element) {
-                            updateViewWithListItem(list, element)
+                            if (element.done) {
+                                console.log("element done", element.id);
+                                updateViewWithListItem(doneList, element);
+                            } else {
+                                console.log("element not done", element.id);
+                                updateViewWithListItem(list, element)
+                            }
                     });
                 });
             }
