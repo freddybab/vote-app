@@ -4,10 +4,20 @@ from flask import Flask, request, send_from_directory
 from werkzeug.utils import safe_join
 from flask_restx import Api, Resource, fields
 
-app = Flask(__name__)
 static = safe_join(os.path.dirname(__file__), 'static')
-api = Api(app, doc='/doc')
+
 app = Flask(__name__)
+
+@app.route('/')
+def _home():
+    """Serve index.html at the root url"""
+    return send_from_directory(static, 'index.html')
+
+@app.route('/<path:path>')
+def _static(path):
+    """Serve content from the static directory"""
+    return send_from_directory(static, path)
+
 api = Api(app, version='1.0', title='TodoMVC API',
     description='A simple TodoMVC API', doc='/documentation'
 )
@@ -53,17 +63,6 @@ DAO = TodoDAO()
 DAO.create({'task': 'Build an API'})
 DAO.create({'task': '?????'})
 DAO.create({'task': 'profit!'})
-
-@app.route('/')
-def _home():
-    """Serve index.html at the root url"""
-    return send_from_directory(static, 'index.html')
-
-@app.route('/<path:path>')
-def _static(path):
-    """Serve content from the static directory"""
-    return send_from_directory(static, path)
-
 
 @ns.route('/')
 class TodoList(Resource):
