@@ -41,6 +41,14 @@ candidate = api.model('Candidate', {
     'name' : fields.String(required=True, description='Candidate Name')
 })
 
+token_ns = api.namespace('tokens', description='Token operations', path='/api/tokens')
+
+token = api.model('Token', {
+    'id': fields.Integer(readonly=True, description='Unique identifier'),
+    'value' : fields.String(required=True, description='Token secret value'),
+    'used' : fields.boolean(readonly=True, default=False, description='Whether this token has been used for voting')
+})
+
 class VoteDAO(object):    
     def __init__(self):
         self.setup_database()
@@ -90,18 +98,28 @@ class VoteDAO(object):
     def setup_database(self):
         if not os.path.exists(DATABASE_FILE):
                 self._execute_sql(
-            '''
-            CREATE TABLE votes(id INTEGER PRIMARY KEY AUTOINCREMENT, candidateId INTEGER);
-            ''', {})
-
-                self._execute_sql(
                 '''
-                CREATE TABLE candidates(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT); 
+                CREATE TABLE votes(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    candidateId INTEGER
+                );
                 ''', {})
 
                 self._execute_sql(
                 '''
-                CREATE TABLE token(id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT, used INTEGER);
+                CREATE TABLE candidates(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT
+                ); 
+                ''', {})
+
+                self._execute_sql(
+                '''
+                CREATE TABLE token(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    value TEXT,
+                    used INTEGER DEFAULT 0
+                );
                 ''', {})
     
     def get_all_votes(self):
@@ -144,7 +162,16 @@ class VoteDAO(object):
     def insert_candidate(self, data):
         candidate = data
         candidate_id = self._execute_sql_lastrowid('''
-        INSERT INTO votes (candidateId) VALUES (:candidateId)
+        INSERT INTO candidate (name) VALUES (:name)
+        ''', data)
+
+        candidate['id'] = candidate_id
+        return candidate
+    
+    def insert_token(self, data):
+        candidate = data
+        candidate_id = self._execute_sql_lastrowid('''
+        INSERT INTO tokens (value) VALUES (:candidateId)
         ''', data)
 
         candidate['id'] = candidate_id
@@ -214,6 +241,16 @@ class Candidate(Resource):
     def get(self, id):
         '''Fetch a given resource'''
         return DAO.get_candidate(id)
+
+@token_ns.route('/')
+class TokenList(Resource):
+    @token_ns.doc('insert_token')
+    @token_ns.expect(token)
+    @token_ns.marshal_with(token, code=201)
+    def post(self):
+        '''Create a new token'''
+        marshalled = marshal(api.payload, token)
+        return DAO.insert_token(marshalled), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
