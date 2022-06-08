@@ -119,6 +119,7 @@ DAO = VoteDAO()
 
 DAO.insert_vote({'id': 1, 'candidateId': 1})
 
+
 @ns.route('/')
 class VoteList(Resource):
     '''Shows a list of all votes, and lets you POST to add new tasks'''
@@ -127,6 +128,7 @@ class VoteList(Resource):
     def get(self):
         '''List all tasks'''
         return DAO.get_all_votes()
+
 
     @ns.doc('insert_vote')
     @ns.expect(vote)
