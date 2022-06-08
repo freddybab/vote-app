@@ -22,20 +22,19 @@ def _static(path):
     """Serve content from the static directory"""
     return send_from_directory(static, path)
 
-api = Api(app, version='1.0', title='TodoMVC API',
-    description='A simple TodoMVC API', doc='/documentation'
+api = Api(app, version='1.0', title='VoteMVC API',
+    description='A simple VoteMVC API', doc='/documentation'
 )
 
-ns = api.namespace('todos', description='TODO operations', path='/api/todos')
+ns = api.namespace('votes', description='Vote operations', path='/api/votes')
 
-todo = api.model('Todo', {
+vote = api.model('Vote', {
     'id': fields.Integer(readonly=True, description='The task unique identifier'),
-    'task': fields.String(required=True, description='The task details'),
-    'fav': fields.Boolean(description='Whether the task is very special', default=False)
+    'candidateId': fields.Integer(required=True, description='Candidate to vote for'),
 })
 
 
-class TodoDAO(object):    
+class VoteDAO(object):    
     def __init__(self):
         self.setup_database()
 
@@ -67,107 +66,89 @@ class TodoDAO(object):
         return lastrow
 
 
-    def _map_todo(self, todo_row):
+    def _map_vote(self, vote_row):
         return {
-                'id': todo_row[0],
-                'task': todo_row[1],
-                'fav': todo_row[2]
+                'id': vote_row[0],
+                'candidateId': vote_row[1],
             }
 
     """
     Opprett tabeller i databasen om database-filen ikke finnes fra før.
     """
     def setup_database(self):
-        if not os.exists(DATABASE_FILE):
-            # OPPGAVE: Skriv SQL som oppretter en tabell med feltene i en todo:
+        if not os.path.exists(DATABASE_FILE):
+                self._execute_sql(
+            '''
+            CREATE TABLE votes(id INTEGER PRIMARY KEY AUTOINCREMENT, candidateId INTEGER);
+            ''', {})
 
-                self._execute_sql('''CREATE TABLE ...
-            )''', {})
+                self._execute_sql(
+                '''
+                CREATE TABLE candidates(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT); 
+                ''', {})
+
+                self._execute_sql(
+                '''
+                CREATE TABLE token(id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT, used INTEGER);
+                ''', {})
     
-    def get_all(self):
+    def get_all_votes(self):
         return_list = []
-        # OPPGAVE: Skriv SQL som hentesr alle radene i todo tabellen
-
-        todos = self._execute_sql_fetchall('''
-        SELECT ...
-        ''', {}) # todo convert to json? marshal? ORM?
-        for todo in todos:
-            return_list.append(self.map_todo(todo))
+        votes = self._execute_sql_fetchall('''
+        SELECT * FROM votes
+        ''', {})
+        for vote in votes:
+            return_list.append(self._map_vote(vote))
         return return_list
     
-    def get(self, id):
+    def get_vote(self, id):
+        vote = self._execute_sql('''
+        SELECT * FROM votes WHERE id = :id''', {'id': id})
+        return self._map_vote(vote)
 
-        # OPPGAVE: Skriv SQL som henter todo-raden med den gitte id-en
-        todo = self._execute_sql('''
-        SELECT ...''', {'id': id})
-        return self.map_todo(todo)
-
-    def create(self, data):
-        todo = data
-        # OPPGAVE: Skriv SQL som setter inn en ny rad i todo tabellen
-        todo_id = self._execute_sql_lastrowid('''
-        INSERT ...
+    def insert_vote(self, data):
+        vote = data
+        vote_id = self._execute_sql_lastrowid('''
+        INSERT INTO votes (candidateId) VALUES (:candidateId)
         ''', data)
 
-        todo['id'] = todo_id
-        return todo
+        vote['id'] = vote_id
+        return vote
 
-    def update(self, id, data):
-        # OPPGAVE: Skriv SQL som oppdaterer den gitte raden i tabellen
-        self._execute_sql('''
-        UPDATE ...
-        ''', data)
-        return todo
+DAO = VoteDAO()
 
-    def delete(self, id):
-        # OPPGAVE: Skriv SQL som sletter den gitte raden i tabellen
-        self._execute_sql('''
-        DELETE ...
-        ''', {'id': id})
+DAO.insert_vote({'id': 1, 'candidateId': 1})
 
-DAO = TodoDAO()
 
 @ns.route('/')
-class TodoList(Resource):
-    '''Shows a list of all todos, and lets you POST to add new tasks'''
-    @ns.doc('list_todos')
-    @ns.marshal_list_with(todo)
+class VoteList(Resource):
+    '''Shows a list of all votes, and lets you POST to add new tasks'''
+    @ns.doc('list_votes')
+    @ns.marshal_list_with(vote)
     def get(self):
         '''List all tasks'''
-        return DAO.get_all()
+        return DAO.get_all_votes()
 
-    @ns.doc('create_todo')
-    @ns.expect(todo)
-    @ns.marshal_with(todo, code=201)
+
+    @ns.doc('insert_vote')
+    @ns.expect(vote)
+    @ns.marshal_with(vote, code=201)
     def post(self):
         '''Create a new task'''
-        marshalled = marshal(api.payload, todo)
-        return DAO.create(marshalled), 201
+        marshalled = marshal(api.payload, vote)
+        return DAO.insert_vote(marshalled), 201
 
 
 @ns.route('/<int:id>')
-@ns.response(404, 'Todo not found')
-@ns.param('id', 'The task identifier')
-class Todo(Resource):
-    '''Show a single todo item and lets you delete them'''
-    @ns.doc('get_todo')
-    @ns.marshal_with(todo)
+@ns.response(404, 'Vote not found')
+@ns.param('id', 'The vote identifier')
+class Vote(Resource):
+    '''Show a single vote'''
+    @ns.doc('get_vote')
+    @ns.marshal_with(vote)
     def get(self, id):
         '''Fetch a given resource'''
-        return DAO.get(id)
-
-    @ns.doc('delete_todo')
-    @ns.response(204, 'Todo deleted')
-    def delete(self, id):
-        '''Delete a task given its identifier'''
-        DAO.delete(id)
-        return '', 204
-
-    @ns.expect(todo)
-    @ns.marshal_with(todo)
-    def put(self, id):
-        '''Update a task given its identifier'''
-        return DAO.update(id, api.payload)
+        return DAO.get_vote(id)
 
 
 if __name__ == '__main__':
